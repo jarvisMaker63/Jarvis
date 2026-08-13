@@ -1,64 +1,61 @@
 async function sendMessage() {
-    const inputField = document.getElementById("userInput");
-    if (!inputField) {
-        console.error("Input field with id 'userInput' not found!");
-        return;
-    }
-    
-    const text = inputField.value.trim();
-    if (!text) return;
+    const inputField = document.getElementById("userinput");
+    if (!inputField || !inputField.value.trim()) return;
 
-    appendMessage("You", text, "user");
+    const text = inputField.value.trim();
     inputField.value = "";
 
-    const thinkingId = "thinking-" + Date.now();
+    // Show user message in chat
+    appendMessage("You", text, "user");
+
+    // Add a temporary "Thinking..." message
     const chatBox = document.getElementById("chatBox");
-    
-    if (chatBox) {
-        const loadingDiv = document.createElement("div");
-        loadingDiv.id = thinkingId;
-        loadingDiv.className = "message jarvis";
-        loadingDiv.innerHTML = "<strong>J.A.R.V.I.S.:</strong> Thinking...";
-        chatBox.appendChild(loadingDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    const thinkingDiv = document.createElement("div");
+    thinkingDiv.className = "message jarvis thinking";
+    thinkingDiv.innerHTML = "J.A.R.V.I.S.: Thinking...";
+    chatBox.appendChild(thinkingDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
-        const apiKey = "YOUR_API_KEY_HERE";
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // 1. Put your actual API key here
+        const apiKey = "YOUR_API_KEY_HERE"; 
+        
+        // 2. Correct API endpoint URL using gemini-2.5-flash
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+        // 3. Correct payload structure expected by the Gemini API
+        const data = {
+            contents: [
+                {
+                    parts: [
+                        { text: text }
+                    ]
+                }
+            ]
+        };
 
         const response = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                contents: [
-                    {
-                        parts: [
-                            { text: text }
-                        ]
-                    }
-                ]
-            })
+            body: JSON.stringify(data)
         });
 
-        const data = await response.json();
+        const jsonResponse = await response.json();
+        thinkingDiv.remove();
 
-        const loadingElement = document.getElementById(thinkingId);
-        if (loadingElement) loadingElement.remove();
-
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
-            const aiReply = data.candidates[0].content.parts[0].text;
+        // 4. Safely extract the text from the API response
+        if (jsonResponse.candidates && jsonResponse.candidates[0].content.parts[0].text) {
+            const aiReply = jsonResponse.candidates[0].content.parts[0].text;
             appendMessage("J.A.R.V.I.S.", aiReply, "jarvis");
         } else {
-            appendMessage("J.A.R.V.I.S.", "Sorry, I received an invalid response.", "jarvis");
+            console.error("API Error Response:", jsonResponse);
+            appendMessage("J.A.R.V.I.S.", "Sorry, I received an invalid response structure.", "jarvis");
         }
 
     } catch (error) {
-        const loadingElement = document.getElementById(thinkingId);
-        if (loadingElement) loadingElement.remove();
-
+        thinkingDiv.remove();
         console.error("Error communicating with Gemini API:", error);
         appendMessage("J.A.R.V.I.S.", "Error: Could not connect to AI service.", "jarvis");
     }
@@ -67,10 +64,6 @@ async function sendMessage() {
 function appendMessage(sender, text, className) {
     const chatBox = document.getElementById("chatBox");
     if (!chatBox) return;
+    const msg
 
-    const msgDiv = document.createElement("div");
-    msgDiv.className = `message ${className}`;
-    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
+
