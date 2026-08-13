@@ -1,98 +1,33 @@
 async function sendMessage() {
-    const inputField = document.getElementById("userinput");
-    if (!inputField || !inputField.value.trim()) return;
-
-    const text = inputField.value.trim();
-    inputField.value = "";
-
-    appendMessage("You", text, "user");
-
+    const input = document.getElementById("userinput");
     const chatBox = document.getElementById("chatBox");
-    const thinkingDiv = document.createElement("div");
-    thinkingDiv.className = "message jarvis thinking";
-    thinkingDiv.innerHTML = "J.A.R.V.I.S.: Thinking...";
-    chatBox.appendChild(thinkingDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    if (!input || !input.value.trim()) return;
+
+    const userText = input.value;
+    input.value = "";
+
+    // Show user message
+    chatBox.innerHTML += `<div><strong>You:</strong> ${userText}</div>`;
 
     try {
-        const apiKey = "YOUR_API_KEY_HERE"; 
+        const apiKey = "YOUR_API_KEY_HERE";
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-        const data = {
-            contents: [
-                {
-                    parts: [
-                        { text: text }
-                    ]
-                }
-            ]
-        };
 
         const response = await fetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: userText }] }]
+            })
         });
 
-        const jsonResponse = await response.json();
-        thinkingDiv.remove();
+        const data = await response.json();
+        const reply = data.candidates[0].content.parts[0].text;
 
-        if (jsonResponse.candidates && jsonResponse.candidates[0].content.parts[0].text) {
-            const aiReply = jsonResponse.candidates[0].content.parts[0].text;
-            appendMessage("J.A.R.V.I.S.", aiReply, "jarvis");
-        } else {
-            console.error("API Error Response:", jsonResponse);
-            appendMessage("J.A.R.V.I.S.", "Sorry, I received an invalid response structure.", "jarvis");
-        }
+        // Show Jarvis reply
+        chatBox.innerHTML += `<div><strong>J.A.R.V.I.S.:</strong> ${reply}</div>`;
 
-    } catch (error) {
-        thinkingDiv.remove();
-        console.error("Error communicating with Gemini API:", error);
-        appendMessage("J.A.R.V.I.S.", "Error: Could not connect to AI service.", "jarvis");
+    } catch (err) {
+        chatBox.innerHTML += `<div><strong>J.A.R.V.I.S.:</strong> Connection error.</div>`;
     }
 }
-
-function appendMessage(sender, text, className) {
-    const chatBox = document.getElementById("chatBox");
-    if (!chatBox) return;
-    const msgDiv = document.createElement("div");
-    msgDiv.className = `message ${className}`;
-    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
-
-        const jsonResponse = await response.json();
-        thinkingDiv.remove();
-
-        // 4. Safely extract the text from the API response
-        if (jsonResponse.candidates && jsonResponse.candidates[0].content.parts[0].text) {
-            const aiReply = jsonResponse.candidates[0].content.parts[0].text;
-            appendMessage("J.A.R.V.I.S.", aiReply, "jarvis");
-        } else {
-            console.error("API Error Response:", jsonResponse);
-            appendMessage("J.A.R.V.I.S.", "Sorry, I received an invalid response structure.", "jarvis");
-        }
-
-    } catch (error) {
-        thinkingDiv.remove();
-        console.error("Error communicating with Gemini API:", error);
-        appendMessage("J.A.R.V.I.S.", "Error: Could not connect to AI service.", "jarvis");
-    }
-}
-
-function appendMessage(sender, text, className) {
-    const chatBox = document.getElementById("chatBox");
-    if (!chatBox) return;
-    const msg
-
-
