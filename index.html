@@ -6,7 +6,6 @@ async function sendMessage() {
     const userText = input.value;
     input.value = "";
 
-    // Show user message
     chatBox.innerHTML += `<div><strong>You:</strong> ${userText}</div>`;
 
     try {
@@ -24,7 +23,6 @@ async function sendMessage() {
         const data = await response.json();
         const reply = data.candidates[0].content.parts[0].text;
 
-        // Show Jarvis reply
         chatBox.innerHTML += `<div><strong>J.A.R.V.I.S.:</strong> ${reply}</div>`;
 
     } catch (err) {
