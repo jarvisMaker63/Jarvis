@@ -1,131 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J.A.R.V.I.S. AI</title>
-    <style>
-        body {
-            background-color: #0b0f19;
-            color: #00ffcc;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            width: 90%;
-            max-width: 500px;
-            background: rgba(0, 20, 30, 0.9);
-            border: 2px solid #00ffcc;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
-        }
-        header {
-            text-align: center;
-            border-bottom: 1px dashed #00ffcc;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        .chat-box {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #005544;
-            padding: 10px;
-            margin-bottom: 12px;
-            background: rgba(0, 5, 10, 0.6);
-        }
-        .message {
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-        .message.jarvis {
-            color: #00ffcc;
-        }
-        .message.user {
-            color: #ffcc00;
-            text-align: right;
-        }
-        .input-area {
-            display: flex;
-            gap: 8px;
-        }
-        input[type="text"] {
-            flex: 1;
-            background: #000;
-            border: 1px solid #00ffcc;
-            color: #00ffcc;
-            padding: 8px;
-            font-family: monospace;
-        }
-        button {
-            background: #00ffcc;
-            color: #0b0f19;
-            border: none;
-            padding: 8px 15px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h3>J.A.R.V.I.S. INTERFACE</h3>
-        </header>
+<script>
+    function appendMessage(sender, text, className) {
+        const chatBox = document.getElementById("chat-box");
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `message ${className}`;
+        msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const inputField = document.getElementById("user-input");
+        const text = inputField.value.trim();
         
-        <div id="chat-box" class="chat-box">
-            <div class="message jarvis">
-                <strong>J.A.R.V.I.S.:</strong> Systems online, Bro. How can I assist you today?
-            </div>
-        </div>
+        if (!text) return;
+        
+        appendMessage("Bro", text, "user");
+        inputField.value = "";
+        
+        // Optional: show a temporary "thinking" message
+        const thinkingId = "thinking-" + Date.now();
+        const chatBox = document.getElementById("chat-box");
+        const loadingDiv = document.createElement("div");
+        loadingDiv.id = thinkingId;
+        loadingDiv.className = "message jarvis";
+        loadingDiv.innerHTML = `<strong>J.A.R.V.I.S.:</strong> Processing command...`;
+        chatBox.appendChild(loadingDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Type command..." autofocus>
-            <button onclick="sendMessage()">Send</button>
-        </div>
-    </div>
+        try {
+            // NOTE: For a production app, you'd want this going through a backend server 
+            // to keep your API key secure. For quick testing, you can place your key below.
+            const apiKey = "YOUR_API_KEY_HERE"; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    <script>
-        function appendMessage(sender, text, className) {
-            const chatBox = document.getElementById("chat-box");
-            const msgDiv = document.createElement("div");
-            msgDiv.className = `message ${className}`;
-            msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: "You are J.A.R.V.I.S., Tony Stark's AI assistant. Answer concisely and stay in character. User input: " + text
+                        }]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            
+            // Remove the loading message
+            document.getElementById(thinkingId).remove();
+
+            // Extract the AI's reply
+            const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Systems encountered an error processing that request, Bro.";
+            
+            appendMessage("J.A.R.V.I.S.", aiReply, "jarvis");
+
+        } catch (error) {
+            document.getElementById(thinkingId).remove();
+            appendMessage("J.A.R.V.I.S.", "Network error: Unable to connect to core systems.", "jarvis");
         }
+    }
 
-        function sendMessage() {
-            const inputField = document.getElementById("user-input");
-            const text = inputField.value.trim();
-            
-            if (!text) return;
-            
-            appendMessage("Bro", text, "user");
-            inputField.value = "";
-            
-            setTimeout(() => {
-                let reply = `Command acknowledged: '${text}'. All systems operating at peak performance, Bro.`;
-                
-                if (text.toLowerCase().includes("status")) {
-                    reply = "All sub-systems nominal. Core temperature stable at 34°C.";
-                } else if (text.toLowerCase().includes("simulation")) {
-                    reply = "Initiating multi-threaded simulation protocol... Metrics look optimal.";
-                }
-                
-                appendMessage("J.A.R.V.I.S.", reply, "jarvis");
-            }, 500);
+    document.getElementById("user-input").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            sendMessage();
         }
-
-        document.getElementById("user-input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                sendMessage();
-            }
-        });
-    </script>
-</body>
-</html>
+    });
+</script>
