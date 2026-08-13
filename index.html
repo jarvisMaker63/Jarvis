@@ -1,5 +1,4 @@
 async function sendMessage() {
-    // 1. Get the input field (Make sure your HTML input has id="userInput")
     const inputField = document.getElementById("userInput");
     if (!inputField) {
         console.error("Input field with id 'userInput' not found!");
@@ -9,11 +8,9 @@ async function sendMessage() {
     const text = inputField.value.trim();
     if (!text) return;
 
-    // 2. Display the user's message in the chat box
     appendMessage("You", text, "user");
     inputField.value = "";
 
-    // 3. Show a temporary "thinking" loading message
     const thinkingId = "thinking-" + Date.now();
     const chatBox = document.getElementById("chatBox");
     
@@ -23,5 +20,57 @@ async function sendMessage() {
         loadingDiv.className = "message jarvis";
         loadingDiv.innerHTML = "<strong>J.A.R.V.I.S.:</strong> Thinking...";
         chatBox.appendChild(loadingDiv);
-        chatBox.
-        
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    try {
+        const apiKey = "YOUR_API_KEY_HERE";
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: [
+                            { text: text }
+                        ]
+                    }
+                ]
+            })
+        });
+
+        const data = await response.json();
+
+        const loadingElement = document.getElementById(thinkingId);
+        if (loadingElement) loadingElement.remove();
+
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+            const aiReply = data.candidates[0].content.parts[0].text;
+            appendMessage("J.A.R.V.I.S.", aiReply, "jarvis");
+        } else {
+            appendMessage("J.A.R.V.I.S.", "Sorry, I received an invalid response.", "jarvis");
+        }
+
+    } catch (error) {
+        const loadingElement = document.getElementById(thinkingId);
+        if (loadingElement) loadingElement.remove();
+
+        console.error("Error communicating with Gemini API:", error);
+        appendMessage("J.A.R.V.I.S.", "Error: Could not connect to AI service.", "jarvis");
+    }
+}
+
+function appendMessage(sender, text, className) {
+    const chatBox = document.getElementById("chatBox");
+    if (!chatBox) return;
+
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `message ${className}`;
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
