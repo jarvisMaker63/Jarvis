@@ -1,18 +1,17 @@
 async function sendMessage() {
-    const inputElement = document.getElementById("userInput");
+    const input = document.getElementById("userInput");
     const chatBox = document.getElementById("chatBox");
     
-    if (!inputElement || !inputElement.value.trim()) return;
+    if (!input || !input.value.trim()) return;
     
-    const userText = inputElement.value;
-    inputElement.value = "";
+    const userText = input.value;
+    input.value = "";
     
-    // Display what you typed
     chatBox.innerHTML += `<br><strong>You:</strong> ${userText}`;
     
     try {
-        const apiKey = "YOUR_ACTUAL_API_KEY"; // Replace with your key
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const apiKey = "YOUR_ACTUAL_API_KEY"; // Replace with your real key
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
             method: "POST",
@@ -23,15 +22,13 @@ async function sendMessage() {
         });
         
         const data = await response.json();
-        
-        // Extract the reply from the JSON response
         const reply = data.candidates[0].content.parts[0].text;
         
-        // Display Jarvis's reply
         chatBox.innerHTML += `<br><strong>J.A.R.V.I.S.:</strong> ${reply}`;
         
     } catch (err) {
         console.error(err);
         chatBox.innerHTML += `<br><strong>J.A.R.V.I.S.:</strong> Connection error.`;
     }
+}
 }
