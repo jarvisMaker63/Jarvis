@@ -1,17 +1,19 @@
 async function sendMessage() {
-    const input = document.getElementById("userinput");
+    const inputElement = document.getElementById("userInput");
     const chatBox = document.getElementById("chatBox");
-    if (!input || !input.value.trim()) return;
-
-    const userText = input.value;
-    input.value = "";
-
-    chatBox.innerHTML += `<div><strong>You:</strong> ${userText}</div>`;
-
+    
+    if (!inputElement || !inputElement.value.trim()) return;
+    
+    const userText = inputElement.value;
+    inputElement.value = "";
+    
+    // Display what you typed
+    chatBox.innerHTML += `<br><strong>You:</strong> ${userText}`;
+    
     try {
-        const apiKey = "YOUR_API_KEY_HERE";
+        const apiKey = "YOUR_ACTUAL_API_KEY"; // Replace with your key
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
+        
         const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -19,13 +21,17 @@ async function sendMessage() {
                 contents: [{ parts: [{ text: userText }] }]
             })
         });
-
+        
         const data = await response.json();
+        
+        // Extract the reply from the JSON response
         const reply = data.candidates[0].content.parts[0].text;
-
-        chatBox.innerHTML += `<div><strong>J.A.R.V.I.S.:</strong> ${reply}</div>`;
-
+        
+        // Display Jarvis's reply
+        chatBox.innerHTML += `<br><strong>J.A.R.V.I.S.:</strong> ${reply}`;
+        
     } catch (err) {
-        chatBox.innerHTML += `<div><strong>J.A.R.V.I.S.:</strong> Connection error.</div>`;
+        console.error(err);
+        chatBox.innerHTML += `<br><strong>J.A.R.V.I.S.:</strong> Connection error.`;
     }
 }
